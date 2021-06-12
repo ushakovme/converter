@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/ushakovme/converter/pkg/converter/infrastructure"
+	"net/http"
 	"os"
 )
+
+const httpAddr = "127.0.0.1:8000"
 
 func main() {
 	fmt.Println("starting converter")
@@ -16,16 +19,26 @@ func main() {
 }
 
 func do() error {
-	pngFile, err := os.Open("tests/files/bar.png")
-	if err != nil {
-		return err
-	}
-
-	jpgFile, err := os.Create("tests/files/bar.jpg")
-	if err != nil {
-		return err
-	}
-
 	converter := infrastructure.NewConverter()
-	return converter.PNGToJPG(pngFile, jpgFile)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/convert", func(writer http.ResponseWriter, request *http.Request) {
+		var err error
+		defer func() {
+			if err != nil {
+				writer.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+		jpgFile, err := os.Create("tests/files/bar.jpg")
+		if err != nil {
+			return
+		}
+
+		pngFile, _, err := request.FormFile("file")
+		if err != nil {
+			return
+		}
+		err = converter.PNGToJPG(pngFile, jpgFile)
+	})
+	return http.ListenAndServe(httpAddr, mux)
 }

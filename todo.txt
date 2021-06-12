@@ -1,6 +1,7 @@
 Plan:
 1. Add basic folder structure and make file +
 2. Implement basic converting PNG => JPG +
-3. Handle http request with image file
-4. Wrap application into docker
-5. Add end2end tests
+3. Handle http request with image file +
+4. Add graceful shutdown
+5. Wrap application into docker
+6. Add end2end tests
