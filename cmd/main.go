@@ -63,16 +63,12 @@ func serve(ctx context.Context, cnf infrastructure.Config) error {
 				writer.WriteHeader(http.StatusInternalServerError)
 			}
 		}()
-		jpgFile, err := os.Create("tests/files/bar.jpg")
-		if err != nil {
-			return
-		}
 
 		pngFile, _, err := request.FormFile("file")
 		if err != nil {
 			return
 		}
-		err = converter.PNGToJPG(pngFile, jpgFile)
+		err = converter.PNGToJPG(pngFile, writer)
 	})
 	server := http.Server{
 		Addr: cnf.Port,
