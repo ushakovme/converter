@@ -3,7 +3,7 @@ Plan:
 2. Implement basic converting PNG => JPG +
 3. Handle http request with image file +
 4. Add graceful shutdown +
-5. Add config with env
+5. Add config with env +
 6. Wrap application into docker
 7. Add end2end tests
 8. Set up logrus

@@ -10,13 +10,11 @@ import (
 	"syscall"
 )
 
-const httpAddr = "127.0.0.1:8000"
-
 func main() {
 	fmt.Println("starting converter")
-	ctx := getSignalCancelContext()
 
-	if err := serve(ctx); err != nil {
+	err := do()
+	if err != nil {
 		fmt.Println("converter stopped with error: ")
 		fmt.Println(err)
 		os.Exit(1)
@@ -24,6 +22,23 @@ func main() {
 
 	fmt.Println("")
 	fmt.Println("converter stopped")
+}
+
+func do() error {
+	cnf, err := infrastructure.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	ctx := getSignalCancelContext()
+
+	if err := serve(ctx, cnf); err != nil {
+		fmt.Println("converter stopped with error: ")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	return nil
 }
 
 func getSignalCancelContext() context.Context {
@@ -37,7 +52,7 @@ func getSignalCancelContext() context.Context {
 	return ctx
 }
 
-func serve(ctx context.Context) error {
+func serve(ctx context.Context, cnf infrastructure.Config) error {
 	converter := infrastructure.NewConverter()
 
 	mux := http.NewServeMux()
@@ -60,7 +75,7 @@ func serve(ctx context.Context) error {
 		err = converter.PNGToJPG(pngFile, jpgFile)
 	})
 	server := http.Server{
-		Addr: httpAddr,
+		Addr: cnf.Port,
 	}
 
 	server.Handler = mux
