@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/ushakovme/converter/pkg/converter/infrastructure"
-	"net/http"
+	proto "github.com/ushakovme/converter/proto/gen/go"
+	"google.golang.org/grpc"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,38 +55,22 @@ func getSignalCancelContext() context.Context {
 }
 
 func serve(ctx context.Context, cnf infrastructure.Config) error {
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
+
 	converter := infrastructure.NewConverter()
+	server := infrastructure.NewServer(converter)
+	proto.RegisterConverterServer(grpcServer, server)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/convert", func(writer http.ResponseWriter, request *http.Request) {
-		var err error
-		defer func() {
-			if err != nil {
-				writer.WriteHeader(http.StatusInternalServerError)
-			}
-		}()
-
-		pngFile, _, err := request.FormFile("file")
-		if err != nil {
-			return
-		}
-		err = converter.PNGToJPG(pngFile, writer)
-	})
-	server := http.Server{
-		Addr: cnf.Port,
-	}
-
-	server.Handler = mux
 	go func() {
 		<-ctx.Done()
-		if err := server.Shutdown(context.Background()); err != nil {
-			fmt.Println("HTTP server ListenAndServe: ", err)
-		}
+		grpcServer.GracefulStop()
 	}()
 
-	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+	lis, err := net.Listen("tcp", cnf.Port)
+	if err != nil {
 		return err
 	}
 
-	return nil
+	return grpcServer.Serve(lis)
 }

@@ -7,3 +7,4 @@ Plan:
 6. Wrap application into docker
 7. Add end2end tests
 8. Set up logrus
+9. Move to protoc

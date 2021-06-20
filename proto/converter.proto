@@ -1,0 +1,22 @@
+syntax = "proto3";
+package converter;
+option go_package = "github.com/ushakovme/converter/proto";
+
+import "google/api/annotations.proto";
+
+service Converter {
+  rpc PNGToJPG(stream PNGToJPGRequest) returns (ConverterResponse){
+    option (google.api.http) = {
+      post: "/v1/convert/png-to-jpg"
+      body: "*"
+    };
+  }
+}
+
+message PNGToJPGRequest {
+  bytes Content = 1;
+}
+
+message ConverterResponse {
+  string ImageID = 1;
+}
